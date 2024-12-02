@@ -9,23 +9,6 @@ import java.util.List;
 
 public class TestService {
 
-    public static int createTestAndGetId(String title, String description) {
-        String sql = "INSERT INTO Tests (title, description) VALUES (?, ?)";
-        try (Connection conn = Database.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
-            pstmt.setString(1, title);
-            pstmt.setString(2, description);
-            pstmt.executeUpdate();
-            ResultSet rs = pstmt.getGeneratedKeys();
-            if (rs.next()) {
-                return rs.getInt(1); // Возвращаем ID созданного теста
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return -1; // Ошибка при создании
-    }
-
-
     public static List<Test> getAllTests() {
         List<Test> tests = new ArrayList<>();
         String sql = "SELECT * FROM Tests";
@@ -43,18 +26,33 @@ public class TestService {
         return tests;
     }
 
-   public static String getTestNameById(int testId) {
-        String sql = "SELECT title FROM Tests WHERE id = ?";
+    public static boolean deleteTest(int testId) {
+        String sql = "DELETE FROM Tests WHERE id = ?";
         try (Connection conn = Database.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setInt(1, testId);
-            ResultSet rs = pstmt.executeQuery();
+            pstmt.executeUpdate();
+            return true;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+
+    public static int addTest(String title, String description) {
+        String sql = "INSERT INTO Tests (title, description) VALUES (?, ?)";
+        try (Connection conn = Database.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            pstmt.setString(1, title);
+            pstmt.setString(2, description);
+            pstmt.executeUpdate();
+            ResultSet rs = pstmt.getGeneratedKeys();
             if (rs.next()) {
-                return rs.getString("title");
+                return rs.getInt(1);
             }
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        return "Unknown Test";
+        return -1;
     }
 
     public static boolean updateTest(Test test) {
@@ -69,5 +67,35 @@ public class TestService {
             e.printStackTrace();
             return false;
         }
+    }
+
+    public static String getTestNameById(int testId) {
+        String sql = "SELECT title FROM Tests WHERE id = ?";
+        try (Connection conn = Database.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setInt(1, testId);
+            ResultSet rs = pstmt.executeQuery();
+            if (rs.next()) {
+                return rs.getString("title");
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public static int createTestAndGetId(String title, String description) {
+        String sql = "INSERT INTO Tests (title, description) VALUES (?, ?)";
+        try (Connection conn = Database.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            pstmt.setString(1, title);
+            pstmt.setString(2, description);
+            pstmt.executeUpdate();
+            ResultSet rs = pstmt.getGeneratedKeys();
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return -1;
     }
 }

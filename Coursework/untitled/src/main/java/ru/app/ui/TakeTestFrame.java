@@ -15,30 +15,42 @@ public class TakeTestFrame extends JFrame {
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setLocationRelativeTo(null);
 
-        JPanel panel = new JPanel();
-        panel.setLayout(new GridLayout(0, 1, 10, 10));
-        add(panel);
+        JPanel mainPanel = new JPanel(new BorderLayout());
+        JLabel instructionLabel = new JLabel("Select a test to start:");
+        instructionLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        mainPanel.add(instructionLabel, BorderLayout.NORTH);
 
         List<Test> tests = TestService.getAllTests();
         if (tests.isEmpty()) {
             JLabel noTestsLabel = new JLabel("No tests available.");
             noTestsLabel.setHorizontalAlignment(SwingConstants.CENTER);
-            panel.add(noTestsLabel);
+            mainPanel.add(noTestsLabel, BorderLayout.CENTER);
         } else {
-            JLabel instructionLabel = new JLabel("Select a test to start:");
-            instructionLabel.setHorizontalAlignment(SwingConstants.CENTER);
-            panel.add(instructionLabel);
-
+            DefaultListModel<Test> testListModel = new DefaultListModel<>();
             for (Test test : tests) {
-                JButton testButton = new JButton(test.getTitle());
-                testButton.addActionListener(e -> {
-                    new TestFrame(user, test);
-                    dispose();
-                });
-                panel.add(testButton);
+                testListModel.addElement(test);
             }
+
+            JList<Test> testList = new JList<>(testListModel);
+            testList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+            JScrollPane scrollPane = new JScrollPane(testList);
+
+            JButton startButton = new JButton("Start Test");
+            startButton.addActionListener(e -> {
+                Test selectedTest = testList.getSelectedValue();
+                if (selectedTest != null) {
+                    new TestFrame(user, selectedTest);
+                    dispose();
+                } else {
+                    JOptionPane.showMessageDialog(this, "Please select a test to start.");
+                }
+            });
+
+            mainPanel.add(scrollPane, BorderLayout.CENTER);
+            mainPanel.add(startButton, BorderLayout.SOUTH);
         }
 
+        add(mainPanel);
         setVisible(true);
     }
 }

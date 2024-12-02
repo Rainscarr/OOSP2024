@@ -23,7 +23,6 @@ public class AddQuestionFrame extends JFrame {
         setLocationRelativeTo(null);
         setLayout(new BorderLayout());
 
-        // Верхняя часть
         JPanel questionPanel = new JPanel(new BorderLayout());
         JLabel questionLabel = new JLabel("Question:");
         questionField = new JTextArea(3, 50);
@@ -36,7 +35,6 @@ public class AddQuestionFrame extends JFrame {
         optionsPanel = new JPanel();
         optionsPanel.setLayout(new BoxLayout(optionsPanel, BoxLayout.Y_AXIS));
         JScrollPane optionsScrollPane = new JScrollPane(optionsPanel);
-
 
         JButton addOptionButton = new JButton("Add Option");
         addOptionButton.addActionListener(e -> addOptionField());
@@ -128,7 +126,6 @@ public class AddQuestionFrame extends JFrame {
         if (QuestionService.addQuestion(questionText, optionsString, correctAnswersString, testId)) {
             JOptionPane.showMessageDialog(this, "Question added successfully!");
 
-            // Очищаем поля для следующего вопроса
             questionField.setText("");
             optionComponents.clear();
             optionsPanel.removeAll();

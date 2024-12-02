@@ -20,7 +20,6 @@ public class Question {
         return text;
     }
 
-    // Геттеры и сеттеры
     public int getId() {
         return id;
     }

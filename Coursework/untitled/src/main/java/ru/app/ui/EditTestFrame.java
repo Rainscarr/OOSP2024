@@ -4,14 +4,12 @@ import ru.app.models.Question;
 import ru.app.models.Test;
 import ru.app.services.QuestionService;
 import ru.app.services.TestService;
-import ru.app.utils.SimpleDocumentListener;
 
 import javax.swing.*;
 import java.awt.*;
 import java.util.List;
 
 public class EditTestFrame extends JFrame {
-    private boolean changesMade = false; // Флаг шоб отслеживать изменения
 
     public EditTestFrame(Test test) {
         setTitle("Edit Test: " + test.getTitle());
@@ -27,9 +25,6 @@ public class EditTestFrame extends JFrame {
         JTextField titleField = new JTextField(test.getTitle());
         JLabel descriptionLabel = new JLabel("Test Description:");
         JTextField descriptionField = new JTextField(test.getDescription() == null ? "" : test.getDescription());
-
-        titleField.getDocument().addDocumentListener((SimpleDocumentListener) e -> changesMade = true);
-        descriptionField.getDocument().addDocumentListener((SimpleDocumentListener) e -> changesMade = true);
 
         headerPanel.add(titleLabel);
         headerPanel.add(titleField);
@@ -47,80 +42,95 @@ public class EditTestFrame extends JFrame {
             questionListModel.addElement(question);
         }
 
-        JPanel questionControlPanel = new JPanel(new FlowLayout());
+        JPanel questionPanel = new JPanel(new BorderLayout());
+        questionPanel.add(questionScrollPane, BorderLayout.CENTER);
+
         JButton addQuestionButton = new JButton("Add Question");
         JButton editQuestionButton = new JButton("Edit Question");
         JButton deleteQuestionButton = new JButton("Delete Question");
 
-        addQuestionButton.addActionListener(e -> {
-            new AddQuestionFrame(test.getId());
-            changesMade = true;
-        });
+        addQuestionButton.addActionListener(e -> new AddQuestionFrame(test.getId()));
 
         editQuestionButton.addActionListener(e -> {
             Question selectedQuestion = questionList.getSelectedValue();
             if (selectedQuestion != null) {
                 new EditQuestionFrame(selectedQuestion, questionListModel);
-                changesMade = true;
             } else {
-                JOptionPane.showMessageDialog(this, "Please select a question to edit.");
+                JOptionPane.showMessageDialog(this, "Please select a question to edit.", "Info", JOptionPane.INFORMATION_MESSAGE);
             }
         });
 
         deleteQuestionButton.addActionListener(e -> {
             Question selectedQuestion = questionList.getSelectedValue();
             if (selectedQuestion != null) {
-                int confirm = JOptionPane.showConfirmDialog(this, "Are you sure you want to delete this question?");
+                int confirm = JOptionPane.showConfirmDialog(this,
+                        "Are you sure you want to delete this question?",
+                        "Confirm Delete",
+                        JOptionPane.YES_NO_OPTION);
                 if (confirm == JOptionPane.YES_OPTION) {
                     if (QuestionService.deleteQuestion(selectedQuestion.getId())) {
                         questionListModel.removeElement(selectedQuestion);
-                        changesMade = true;
                         JOptionPane.showMessageDialog(this, "Question deleted successfully.");
                     } else {
                         JOptionPane.showMessageDialog(this, "Failed to delete question.", "Error", JOptionPane.ERROR_MESSAGE);
                     }
                 }
             } else {
-                JOptionPane.showMessageDialog(this, "Please select a question to delete.");
+                JOptionPane.showMessageDialog(this, "Please select a question to delete.", "Info", JOptionPane.INFORMATION_MESSAGE);
             }
         });
 
-        questionControlPanel.add(addQuestionButton);
-        questionControlPanel.add(editQuestionButton);
-        questionControlPanel.add(deleteQuestionButton);
+        JPanel questionButtonsPanel = new JPanel();
+        questionButtonsPanel.add(addQuestionButton);
+        questionButtonsPanel.add(editQuestionButton);
+        questionButtonsPanel.add(deleteQuestionButton);
 
-        JPanel questionPanel = new JPanel(new BorderLayout());
-        questionPanel.add(questionScrollPane, BorderLayout.CENTER);
-        questionPanel.add(questionControlPanel, BorderLayout.SOUTH);
-
+        questionPanel.add(questionButtonsPanel, BorderLayout.SOUTH);
         panel.add(questionPanel, BorderLayout.CENTER);
 
         JPanel controlPanel = new JPanel(new FlowLayout());
         JButton saveButton = new JButton("Save Changes");
+        JButton deleteTestButton = new JButton("Delete Test");
         JButton closeButton = new JButton("Close");
 
         saveButton.addActionListener(e -> {
-            if (changesMade) {
-                String newTitle = titleField.getText().trim();
-                String newDescription = descriptionField.getText().trim();
+            String newTitle = titleField.getText().trim();
+            String newDescription = descriptionField.getText().trim();
 
-                if (!newTitle.isEmpty()) {
-                    test.setTitle(newTitle);
-                    test.setDescription(newDescription.isEmpty() ? null : newDescription);
-                    TestService.updateTest(test);
+            if (!newTitle.isEmpty()) {
+                test.setTitle(newTitle);
+                test.setDescription(newDescription.isEmpty() ? null : newDescription);
+                if (TestService.updateTest(test)) {
                     JOptionPane.showMessageDialog(this, "Changes saved successfully!");
-                    changesMade = false; // Сбрасываем флаг изменений
                 } else {
-                    JOptionPane.showMessageDialog(this, "Test title cannot be empty.", "Error", JOptionPane.ERROR_MESSAGE);
+                    JOptionPane.showMessageDialog(this, "Failed to save changes.", "Error", JOptionPane.ERROR_MESSAGE);
                 }
             } else {
-                JOptionPane.showMessageDialog(this, "No changes were made.");
+                JOptionPane.showMessageDialog(this, "Test title cannot be empty.", "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        });
+
+        deleteTestButton.addActionListener(e -> {
+            int confirm = JOptionPane.showConfirmDialog(this,
+                    "Are you sure you want to delete this test?\nThis will also delete all associated questions.",
+                    "Confirm Delete",
+                    JOptionPane.YES_NO_OPTION);
+
+            if (confirm == JOptionPane.YES_OPTION) {
+                QuestionService.deleteQuestionsByTestId(test.getId());
+                if (TestService.deleteTest(test.getId())) {
+                    JOptionPane.showMessageDialog(this, "Test deleted successfully!");
+                    dispose();
+                } else {
+                    JOptionPane.showMessageDialog(this, "Failed to delete test.", "Error", JOptionPane.ERROR_MESSAGE);
+                }
             }
         });
 
         closeButton.addActionListener(e -> dispose());
 
         controlPanel.add(saveButton);
+        controlPanel.add(deleteTestButton);
         controlPanel.add(closeButton);
         panel.add(controlPanel, BorderLayout.SOUTH);
 

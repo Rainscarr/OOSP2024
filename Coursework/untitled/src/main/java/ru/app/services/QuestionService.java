@@ -45,7 +45,6 @@ public class QuestionService {
         }
     }
 
-
     public static boolean updateQuestion(Question question) {
         String sql = "UPDATE Questions SET text = ?, options = ?, correct_answer = ? WHERE id = ?";
         try (Connection conn = Database.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -53,6 +52,18 @@ public class QuestionService {
             pstmt.setString(2, question.getOptions());
             pstmt.setString(3, question.getCorrectAnswer());
             pstmt.setInt(4, question.getId());
+            pstmt.executeUpdate();
+            return true;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    public static boolean deleteQuestionsByTestId(int testId) {
+        String sql = "DELETE FROM Questions WHERE test_id = ?";
+        try (Connection conn = Database.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setInt(1, testId);
             pstmt.executeUpdate();
             return true;
         } catch (SQLException e) {

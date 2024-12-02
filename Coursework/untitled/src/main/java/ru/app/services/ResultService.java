@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ResultService {
+
     public static boolean saveResult(int userId, int testId, int score) {
         // Используем московское время (UTC+3)
         String sql = "INSERT INTO Results (user_id, test_id, score, date) VALUES (?, ?, ?, datetime('now', 'localtime'))";
@@ -24,12 +25,6 @@ public class ResultService {
     }
 
 
-    /**
-     * Получает список всех результатов студента.
-     *
-     * @param userId ID пользователя (студента).
-     * @return Список результатов.
-     */
     public static List<Result> getResultsForUser(int userId) {
         List<Result> results = new ArrayList<>();
         String sql = "SELECT * FROM Results WHERE user_id = ?";
@@ -50,7 +45,6 @@ public class ResultService {
         }
         return results;
     }
-
 
     public static List<Result> getResultsForTest(int testId) {
         List<Result> results = new ArrayList<>();

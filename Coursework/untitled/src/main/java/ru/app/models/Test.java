@@ -11,7 +11,6 @@ public class Test {
         this.description = description;
     }
 
-    // Getters
     public int getId() {
         return id;
     }
@@ -20,16 +19,20 @@ public class Test {
         return title;
     }
 
-    public String getDescription() {
-        return description;
-    }
-
-    // Setters
     public void setTitle(String title) {
         this.title = title;
     }
 
+    public String getDescription() {
+        return description;
+    }
+
     public void setDescription(String description) {
         this.description = description;
+    }
+
+    @Override
+    public String toString() {
+        return title != null && !title.isEmpty() ? title : "Untitled Test (ID: " + id + ")";
     }
 }

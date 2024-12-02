@@ -21,63 +21,67 @@ public class MainFrame extends JFrame {
 
         JLabel welcomeLabel = new JLabel("Welcome, " + user.getLogin() + " (" + user.getRole() + ")");
         welcomeLabel.setHorizontalAlignment(SwingConstants.CENTER);
+
         panel.add(welcomeLabel);
 
         if (user.getRole().equalsIgnoreCase("teacher")) {
             JButton createTestButton = new JButton("Create Test");
-            createTestButton.addActionListener(e -> new CreateTestFrame());
-
             JButton viewResultsButton = new JButton("View Results");
-            viewResultsButton.addActionListener(e -> new TeacherResultsFrame(user));
+            JButton editTestButton = new JButton("Edit Test");
+            JButton logoutButton = new JButton("Logout");
 
-            JButton editTestButton = new JButton("Edit Tests");
-            editTestButton.addActionListener(e -> openEditTestSelector());
+            createTestButton.addActionListener(e -> new CreateTestFrame());
+            viewResultsButton.addActionListener(e -> new TeacherResultsFrame(user));
+            editTestButton.addActionListener(e -> {
+                List<Test> tests = TestService.getAllTests();
+                if (tests.isEmpty()) {
+                    JOptionPane.showMessageDialog(this, "No tests available for editing.");
+                    return;
+                }
+
+                Test selectedTest = (Test) JOptionPane.showInputDialog(
+                        this,
+                        "Select a test to edit:",
+                        "Edit Test",
+                        JOptionPane.QUESTION_MESSAGE,
+                        null,
+                        tests.toArray(),
+                        tests.get(0)
+                );
+
+                if (selectedTest != null) {
+                    new EditTestFrame(selectedTest);
+                }
+            });
+
+            logoutButton.addActionListener(e -> {
+                dispose();
+                new LoginFrame();
+            });
 
             panel.add(createTestButton);
             panel.add(viewResultsButton);
             panel.add(editTestButton);
-
+            panel.add(logoutButton);
         } else if (user.getRole().equalsIgnoreCase("student")) {
             JButton takeTestButton = new JButton("Take Test");
+            JButton viewMyResultsButton = new JButton("View My Results");
+            JButton logoutButton = new JButton("Logout");
+
             takeTestButton.addActionListener(e -> new TakeTestFrame(user));
 
-            JButton viewMyResultsButton = new JButton("View My Results");
             viewMyResultsButton.addActionListener(e -> new StudentResultsFrame(user));
+
+            logoutButton.addActionListener(e -> {
+                dispose();
+                new LoginFrame();
+            });
 
             panel.add(takeTestButton);
             panel.add(viewMyResultsButton);
+            panel.add(logoutButton);
         }
 
         setVisible(true);
-    }
-
-    private void openEditTestSelector() {
-        List<Test> tests = TestService.getAllTests(); // Получаем все тесты
-        if (tests.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "No tests available for editing.", "Info", JOptionPane.INFORMATION_MESSAGE);
-            return;
-        }
-
-        String[] testTitles = tests.stream().map(Test::getTitle).toArray(String[]::new);
-        String selectedTestTitle = (String) JOptionPane.showInputDialog(
-                this,
-                "Select a test to edit:",
-                "Edit Test",
-                JOptionPane.PLAIN_MESSAGE,
-                null,
-                testTitles,
-                testTitles[0]
-        );
-
-        if (selectedTestTitle != null) {
-            Test selectedTest = tests.stream()
-                    .filter(test -> test.getTitle().equals(selectedTestTitle))
-                    .findFirst()
-                    .orElse(null);
-
-            if (selectedTest != null) {
-                new EditTestFrame(selectedTest);
-            }
-        }
     }
 }
